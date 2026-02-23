@@ -1,73 +1,53 @@
-# React + TypeScript + Vite
+# Mini Context Browser Extension
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a Manifest V3 browser extension scaffold that provides:
 
-Currently, two official plugins are available:
+- A React popup for controls
+- A React content-script mini context window on LLM sites
+- GSAP-based open/close animation for the mini window
+- A background service worker for keyboard-command and message routing
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- Auto-injects on major LLM chat websites
+- Opens a mini "side question" context box without touching the main chat input
+- Supports quick open/toggle via popup and keyboard shortcut
+- Captures context from selection and recent conversation DOM snippets
+- Keeps a mini side-thread history inside the in-page panel
+- Uses subtle GSAP transitions (mount, open/close, status/answer reveals, micro-hover)
+- Uses a placeholder SLM responder in the background script (easy to replace later)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- JavaScript (build script and extension packaging)
+- TypeScript
+- React
+- GSAP
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Scripts
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- `npm run dev`: Runs Vite for popup-only local preview
+- `npm run typecheck`: Type-checks TypeScript sources
+- `npm run build`: Builds extension files into `dist/`
+- `npm run lint`: Runs ESLint
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Build and Load
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. Run `npm run build`
+2. Open `chrome://extensions` (or Edge extensions page)
+3. Enable Developer Mode
+4. Click "Load unpacked"
+5. Select the `dist/` folder
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Keyboard Shortcut
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `Alt+Shift+S`: Toggle the in-page mini context window
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Main Files
+
+- `public/manifest.json`: Extension manifest
+- `src/content/MiniContextApp.tsx`: Floating mini context component
+- `src/content/index.tsx`: Content-script mount entry
+- `src/popup/PopupApp.tsx`: Extension popup app
+- `src/background/index.ts`: Background service worker
+- `scripts/build.mjs`: esbuild packaging script

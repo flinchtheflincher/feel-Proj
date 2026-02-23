@@ -2,12 +2,75 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mini-sideliner</title>
+    <title>Mini Context Extension - Local Dev Demo</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        background: #111;
+        color: #eee;
+        display: flex;
+      }
+      .host-page {
+        flex: 1;
+        padding: 40px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .message {
+        margin-bottom: 24px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        line-height: 1.5;
+        background: #1e1e24;
+      }
+      .message.bot { background: #192a23; border: 1px solid #204031; }
+      
+      /* The popup will render into #root */
+      #root {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        z-index: 10000;
+        display: none; /* Hide popup by default to focus on the overlay */
+      }
+    </style>
   </head>
   <body>
+    <!-- Dummy Host Page Content to simulate ChatGPT/Claude -->
+    <div class="host-page">
+      <h1>Local Extension Test Environment</h1>
+      <p style="color: #aaa; margin-bottom: 30px;">
+        This is a mock page. The mini context window is injected into the bottom right.<br>
+        Select some text or just ask a question to see the SLM response.
+      </p>
+
+      <div class="message" data-message-author-role="user">
+        How do you write a binary search tree in TypeScript?
+      </div>
+      <div class="message bot" data-testid="conversation-turn">
+        A binary search tree (BST) in TypeScript involves defining a Node class and a BST class with insert/search methods.
+        Here is a brief example...
+      </div>
+      <div class="message" data-message-author-role="user">
+        What is the time complexity of a balanced one?
+      </div>
+      <div class="message bot" data-testid="conversation-turn">
+        For a perfectly balanced binary search tree, the time complexity for search, insert, and delete is typically O(log n).
+      </div>
+      <p style="margin-top: 50px; color: #777; font-size: 14px;">
+        (Try selecting some of this text, then use the bottom-right Mini Context widget!)
+      </p>
+    </div>
+
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+
+    <script type="module" src="/src/shared/mockChrome.ts"></script>
+    <script type="module" src="/src/popup/main.tsx"></script>
+    <script type="module" src="/src/content/index.tsx"></script>
   </body>
 </html>
