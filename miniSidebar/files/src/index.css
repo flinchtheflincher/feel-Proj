@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Ensure shadow root behaves properly */
+:host {
+  all: initial;
+}

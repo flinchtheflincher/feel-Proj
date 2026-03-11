@@ -3,17 +3,19 @@
   "name": "Mini Context Window",
   "description": "Open a mini context box on LLM sites to ask side questions without breaking your main conversation flow.",
   "version": "0.1.0",
-  "permissions": ["storage", "tabs", "activeTab"],
+  "permissions": [
+    "storage",
+    "storage",
+    "tabs",
+    "activeTab",
+    "scripting"
+  ],
   "host_permissions": [
-    "https://chat.openai.com/*",
-    "https://chatgpt.com/*",
-    "https://claude.ai/*",
-    "https://gemini.google.com/*",
-    "https://www.perplexity.ai/*"
+    "<all_urls>",
+    "http://localhost:11434/*"
   ],
   "action": {
-    "default_title": "Mini Context",
-    "default_popup": "popup.html"
+    "default_title": "Mini Context"
   },
   "background": {
     "service_worker": "background.js"
@@ -30,13 +32,11 @@
   "content_scripts": [
     {
       "matches": [
-        "https://chat.openai.com/*",
-        "https://chatgpt.com/*",
-        "https://claude.ai/*",
-        "https://gemini.google.com/*",
-        "https://www.perplexity.ai/*"
+        "<all_urls>"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ]

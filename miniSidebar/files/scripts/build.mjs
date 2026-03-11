@@ -29,6 +29,9 @@ await Promise.all(
       target: ['chrome120'],
       platform: 'browser',
       jsx: 'automatic',
+      loader: {
+        '.css': 'text'
+      },
       define: {
         'process.env.NODE_ENV': '"production"',
       },

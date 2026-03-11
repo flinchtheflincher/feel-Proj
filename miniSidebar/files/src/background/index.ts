@@ -1,3 +1,4 @@
+/// <reference types="chrome" />
 import { DEFAULT_AUTO_OPEN, STORAGE_KEYS } from '../shared/constants'
 import {
   MESSAGE_TYPES,
@@ -29,41 +30,105 @@ const sendMessageToActiveTab = (message: ExtensionMessage): void => {
   })
 }
 
-const clip = (value: string, maxLength: number): string =>
-  value.length > maxLength ? `${value.slice(0, maxLength - 3)}...` : value
 
-const buildStubAnswer = (payload: AskSlmPayload): string => {
+const queryLocalModelStream = async (payload: AskSlmPayload, tabId: number): Promise<void> => {
   const prompt = payload.prompt ?? ''
   const trimmedPrompt = prompt.trim()
   const trimmedContext = payload.contextSnippet?.trim() ?? ''
+  const chatId = payload.chatId
 
   if (!trimmedPrompt) {
-    return 'Ask a short side question and this mini context window will return a focused answer.'
+    chrome.tabs.sendMessage(tabId, { type: MESSAGE_TYPES.SLM_DONE, payload: { chatId } })
+    return
   }
 
-  const contextLine = trimmedContext
-    ? `Context used: "${clip(trimmedContext, 220)}"`
-    : 'Context used: none (direct question mode).'
+  const systemMessage = trimmedContext
+    ? `You are an AI assistant in a browser extension. Use the following page context to answer the user's question:\n"""\n${trimmedContext}\n"""`
+    : 'You are a helpful AI assistant in a browser extension.'
 
-  const sourceLine = payload.pageTitle
-    ? `From tab: ${clip(payload.pageTitle, 90)}`
-    : payload.pageUrl
-      ? `From tab URL: ${clip(payload.pageUrl, 90)}`
-      : 'From tab: unknown'
+  try {
+    const response = await fetch('http://localhost:11434/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama3',
+        prompt: trimmedPrompt,
+        system: systemMessage,
+        stream: true
+      })
+    })
 
-  return [
-    `Quick side-answer (SLM placeholder): "${clip(trimmedPrompt, 180)}"`,
-    '',
-    contextLine,
-    sourceLine,
-    '',
-    'Swap this responder with your real SLM endpoint in src/background/index.ts.',
-  ].join('\n')
+    if (!response.ok) {
+      throw new Error(`Local model request failed with status: ${response.status}`)
+    }
+
+    if (!response.body) throw new Error('No response body')
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder('utf-8')
+    let done = false
+
+    while (!done) {
+      const { value, done: readerDone } = await reader.read()
+      done = readerDone
+      if (value) {
+        const chunkStr = decoder.decode(value, { stream: true })
+        const lines = chunkStr.split('\n').filter(Boolean)
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line)
+            if (data.response) {
+               chrome.tabs.sendMessage(tabId, {
+                 type: MESSAGE_TYPES.SLM_CHUNK,
+                 payload: { chatId, text: data.response }
+               })
+            }
+          } catch (e) {
+            // ignore JSON parse error for incomplete chunks
+          }
+        }
+      }
+    }
+  } catch (err: any) {
+    chrome.tabs.sendMessage(tabId, {
+      type: MESSAGE_TYPES.SLM_CHUNK,
+      payload: { chatId, text: `\n[Error: ${err.message}]` }
+    })
+  } finally {
+    chrome.tabs.sendMessage(tabId, { type: MESSAGE_TYPES.SLM_DONE, payload: { chatId } })
+  }
 }
 
 chrome.runtime.onInstalled.addListener(() => {
   ensureDefaultSettings()
 })
+
+chrome.action.onClicked.addListener(async (tab) => {
+  console.log('Extension icon clicked', tab.id);
+  const tabId = tab.id;
+  if (typeof tabId !== 'number') return;
+
+  try {
+    // Try sending a message first
+    await chrome.tabs.sendMessage(tabId, { type: MESSAGE_TYPES.TOGGLE_PANEL });
+    console.log('Sent TOGGLE_PANEL message to content script');
+  } catch (err) {
+    // If it fails, the content script might not be injected yet
+    console.log('Message failed, attempting to inject content script...', err);
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ['content.js']
+      });
+      console.log('Content script injected via executeScript');
+      // No need to send message here as mountMiniContext handles initial render
+    } catch (injectErr) {
+      console.error('Failed to inject content script:', injectErr);
+    }
+  }
+});
 
 chrome.commands.onCommand.addListener((command: string) => {
   if (command !== 'toggle-mini-context') {
@@ -76,7 +141,7 @@ chrome.commands.onCommand.addListener((command: string) => {
 chrome.runtime.onMessage.addListener(
   (
     message: ExtensionMessage<AskSlmPayload>,
-    _sender: unknown,
+    sender: chrome.runtime.MessageSender,
     sendResponse: (response: AskSlmResponse) => void,
   ) => {
     if (message.type !== MESSAGE_TYPES.ASK_SLM) {
@@ -89,8 +154,15 @@ chrome.runtime.onMessage.addListener(
         typeof message.payload?.contextSnippet === 'string' ? message.payload.contextSnippet : undefined,
       pageTitle: typeof message.payload?.pageTitle === 'string' ? message.payload.pageTitle : undefined,
       pageUrl: typeof message.payload?.pageUrl === 'string' ? message.payload.pageUrl : undefined,
+      chatId: typeof message.payload?.chatId === 'string' ? message.payload.chatId : undefined,
     }
 
-    sendResponse({ answer: buildStubAnswer(payload) })
+    const tabId = sender.tab?.id
+    if (tabId) {
+      queryLocalModelStream(payload, tabId).catch(console.error)
+    }
+
+    sendResponse({ answer: 'Stream started' })
+    return true
   },
 )
