@@ -15,7 +15,30 @@ This project is a Manifest V3 browser extension scaffold that provides:
 - Captures context from selection and recent conversation DOM snippets
 - Keeps a mini side-thread history inside the in-page panel
 - Uses subtle GSAP transitions (mount, open/close, status/answer reveals, micro-hover)
-- Uses a placeholder SLM responder in the background script (easy to replace later)
+- Integrated with local Ollama API for private LLM inference
+
+## Prerequisites
+
+- **Ollama**: Must be installed and running locally on `http://localhost:11434`.
+
+### Ollama Configuration (CORS)
+
+Because browser extensions access Ollama from a `chrome-extension://` origin, you **must** configure Ollama to allow these requests:
+
+**On macOS:**
+1. Open Terminal.
+2. Run: `launchctl setenv OLLAMA_ORIGINS "chrome-extension://*"`
+3. Quit Ollama (from the menu bar icon) and restart it.
+
+**On Linux:**
+1. Run: `systemctl edit ollama.service`
+2. Add under `[Service]`: `Environment="OLLAMA_ORIGINS=chrome-extension://*"`
+3. Run: `systemctl daemon-reload` and `systemctl restart ollama`
+
+**On Windows:**
+1. Open Environment Variables in System Properties.
+2. Add a new User Variable: `OLLAMA_ORIGINS` with value `chrome-extension://*`
+3. Restart Ollama from the system tray.
 
 ## Tech Stack
 

@@ -10,7 +10,6 @@ const outDir = resolve(rootDir, 'dist')
 const publicDir = resolve(rootDir, 'public')
 
 const entries = [
-  { name: 'popup', entry: resolve(rootDir, 'src/popup/main.tsx') },
   { name: 'content', entry: resolve(rootDir, 'src/content/index.tsx') },
   { name: 'background', entry: resolve(rootDir, 'src/background/index.ts') },
 ]
