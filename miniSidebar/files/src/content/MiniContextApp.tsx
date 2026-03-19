@@ -8,9 +8,7 @@ import { db } from '../shared/db'
 import { clip, normalize, nextId } from '../shared/utils'
 import { STORAGE_KEYS, DEFAULT_MODEL } from '../shared/constants'
 
-interface MiniContextAppProps {
-  initiallyOpen: boolean
-}
+
 
 const CONTEXT_SELECTORS = [
   '[data-message-author-role]',
@@ -104,8 +102,8 @@ const formatRelativeTime = (timestamp: number): string => {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-const MiniContextApp = ({ initiallyOpen }: MiniContextAppProps) => {
-  const [isOpen, setIsOpen] = useState(initiallyOpen)
+const MiniContextApp = () => {
+  const [isOpen, setIsOpen] = useState(false)
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [question, setQuestion] = useState('')
   const [error, setError] = useState('')
@@ -176,6 +174,7 @@ const MiniContextApp = ({ initiallyOpen }: MiniContextAppProps) => {
       y: isOpen ? 0 : 16,
       scale: isOpen ? 1 : 0.97,
       pointerEvents: isOpen ? 'auto' : 'none',
+      display: isOpen ? 'flex' : 'none',
       duration: 0.24,
       ease: isOpen ? 'power2.out' : 'power2.in',
     })
@@ -609,6 +608,7 @@ const MiniContextApp = ({ initiallyOpen }: MiniContextAppProps) => {
       >
         <div
           ref={panelRef}
+          style={{ display: 'none' }}
           className={`w-[420px] h-[640px] max-h-[85vh] flex flex-col bg-[#131313] text-slate-200 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.05)] overflow-hidden
             ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         >

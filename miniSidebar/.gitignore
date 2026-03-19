@@ -30,7 +30,6 @@ skills/
 architecture.md
 changes.md
 plan.md
-plan-2026-03-14.md
 files.md
 files-2026-03-14.md
 files-2026-03-15.md
@@ -41,3 +40,14 @@ PRD.md
 
 pOwers/**
 sKills/**
+
+everything.md
+
+.agent/**
+!.agent/workflows/
+.agents/**
+!.agents/workflows/
+_agent/**
+!_agent/workflows/
+_agents/**
+!_agents/workflows/

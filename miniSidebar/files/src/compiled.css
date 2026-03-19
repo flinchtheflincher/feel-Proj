@@ -201,6 +201,9 @@
   .pointer-events-none {
     pointer-events: none;
   }
+  .visible {
+    visibility: visible;
+  }
   .absolute {
     position: absolute;
   }
@@ -210,14 +213,8 @@
   .relative {
     position: relative;
   }
-  .static {
-    position: static;
-  }
   .inset-5 {
     inset: calc(var(--spacing) * 5);
-  }
-  .end {
-    inset-inline-end: var(--spacing);
   }
   .-top-10 {
     top: calc(var(--spacing) * -10);

@@ -1,47 +1,37 @@
 import { createRoot } from 'react-dom/client'
 import MiniContextApp from './MiniContextApp'
-import { DEFAULT_AUTO_OPEN, STORAGE_KEYS } from '../shared/constants'
-import tailwindStyles from '../compiled.css'
+import tailwindStyles from '../compiled.css?inline'
 
 const HOST_ID = 'mini-context-extension-root'
 
-const readAutoOpenSetting = async (): Promise<boolean> =>
-  new Promise((resolve) => {
-    chrome.storage.sync.get([STORAGE_KEYS.AUTO_OPEN], (result: Record<string, unknown>) => {
-      const autoOpenValue = result[STORAGE_KEYS.AUTO_OPEN]
-      resolve(typeof autoOpenValue === 'boolean' ? autoOpenValue : DEFAULT_AUTO_OPEN)
-    })
-  })
-
 const mountMiniContext = async (): Promise<void> => {
   if (window.top !== window) return;
-  
+
   const existing = document.getElementById(HOST_ID);
-  if (existing) {
-    // If it exists but was somehow hidden, force it open
-    return;
-  }
+  if (existing) return;
 
   try {
+    console.log('[MiniSide] Starting mount process...');
     const host = document.createElement('div');
     host.id = HOST_ID;
-    host.style.position = 'static';
-    host.style.display = 'block';
+    host.style.position = 'fixed'; // Ensure it's visible
+    host.style.bottom = '0';
+    host.style.right = '0';
+    host.style.zIndex = '2147483647';
     
-    // Inject at the very end of the document to be the last thing hydrated/processed
-    document.documentElement.appendChild(host);
+    document.body.appendChild(host);
 
     const shadowRoot = host.attachShadow({ mode: 'open' });
     const styleTag = document.createElement('style');
-    styleTag.textContent = tailwindStyles;
+    styleTag.textContent = typeof tailwindStyles === 'string' ? tailwindStyles : (tailwindStyles as { default?: string }).default || '';
     shadowRoot.appendChild(styleTag);
     
     const rootContainer = document.createElement('div');
     shadowRoot.appendChild(rootContainer);
 
-    const initiallyOpen = await readAutoOpenSetting();
-    console.log('[MiniSide] Mounting...', { initiallyOpen });
-    createRoot(rootContainer).render(<MiniContextApp initiallyOpen={initiallyOpen} />);
+    console.log('[MiniSide] Rendering React app...');
+    createRoot(rootContainer).render(<MiniContextApp />);
+    console.log('[MiniSide] Mount complete.');
   } catch (err) {
     console.error('[MiniSide] Mount failed:', err);
   }

@@ -1,5 +1,5 @@
 /// <reference types="chrome" />
-import { DEFAULT_AUTO_OPEN, DEFAULT_MODEL, OLLAMA_BASE_URL, STORAGE_KEYS } from '../shared/constants'
+import { DEFAULT_MODEL, OLLAMA_BASE_URL, STORAGE_KEYS } from '../shared/constants'
 import {
   MESSAGE_TYPES,
   type AskSlmPayload,
@@ -12,16 +12,9 @@ import {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const ensureDefaultSettings = (): void => {
-  chrome.storage.sync.get([STORAGE_KEYS.AUTO_OPEN, STORAGE_KEYS.SELECTED_MODEL], (result: Record<string, unknown>) => {
-    const updates: Record<string, unknown> = {}
-    if (typeof result[STORAGE_KEYS.AUTO_OPEN] !== 'boolean') {
-      updates[STORAGE_KEYS.AUTO_OPEN] = DEFAULT_AUTO_OPEN
-    }
+  chrome.storage.sync.get([STORAGE_KEYS.SELECTED_MODEL], (result: Record<string, unknown>) => {
     if (typeof result[STORAGE_KEYS.SELECTED_MODEL] !== 'string') {
-      updates[STORAGE_KEYS.SELECTED_MODEL] = DEFAULT_MODEL
-    }
-    if (Object.keys(updates).length > 0) {
-      chrome.storage.sync.set(updates)
+      chrome.storage.sync.set({ [STORAGE_KEYS.SELECTED_MODEL]: DEFAULT_MODEL })
     }
   })
 }
@@ -195,7 +188,11 @@ chrome.action.onClicked.addListener(async (tab) => {
         target: { tabId },
         files: ['content.js'],
       })
-      // No need to send message here as content.js auto-mounts and auto-opens by default
+      // Since we changed DEFAULT_AUTO_OPEN to false, we must explicitly send the open message
+      // after injection. We add a small delay to ensure the content script has initialized its listener.
+      setTimeout(() => {
+        chrome.tabs.sendMessage(tabId, { type: MESSAGE_TYPES.OPEN_PANEL, payload: { focusInput: true } }).catch(() => {})
+      }, 200)
     } catch (injectErr) {
       console.error('Failed to inject content script:', injectErr)
     }

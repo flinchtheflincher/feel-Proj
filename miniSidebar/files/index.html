@@ -65,7 +65,21 @@
       <p style="margin-top: 50px; color: #777; font-size: 14px;">
         (Try selecting some of this text, then use the bottom-right Mini Context widget!)
       </p>
+
+      <button id="mock-trigger" style="margin-top: 20px; padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+        Toggle Mini Context (Alt+Shift+S)
+      </button>
     </div>
+
+    <script>
+      document.getElementById('mock-trigger').addEventListener('click', () => {
+        window.dispatchEvent(new KeyboardEvent('keydown', {
+          altKey: true,
+          shiftKey: true,
+          code: 'KeyS'
+        }));
+      });
+    </script>
 
     <script type="module" src="/src/shared/mockChrome.ts"></script>
     <script type="module" src="/src/content/index.tsx"></script>
